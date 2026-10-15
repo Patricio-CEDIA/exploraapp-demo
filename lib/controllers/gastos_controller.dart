@@ -26,6 +26,21 @@ class GastosController extends GetxController {
   /// Categorías que define el backend (`GET /gastos/categorias`).
   final RxList<String> categorias = <String>[].obs;
 
+  /// Categoría elegida en el filtro de la pantalla; `null` significa «Todas».
+  final RxnString categoriaSeleccionada = RxnString();
+
+  /// Categorías que aparecen en los gastos cargados, en orden de aparición.
+  List<String> get categoriasEnGastos => gastos.map((g) => g.categoria).toSet().toList();
+
+  /// Los gastos que se muestran: todos, o solo los de la categoría elegida.
+  List<Gasto> get gastosFiltrados {
+    final elegida = categoriaSeleccionada.value;
+    if (elegida == null) return gastos.toList();
+    return gastos.where((g) => g.categoria == elegida).toList();
+  }
+
+  void seleccionarCategoria(String? categoria) => categoriaSeleccionada.value = categoria;
+
   /// `true` solo cuando la última carga exitosa vino de la caché local (el
   /// servidor no respondió): la UI lo usa para avisar «datos guardados».
   final RxBool desdeCache = false.obs;
@@ -72,6 +87,9 @@ class GastosController extends GetxController {
   Future<void> _refrescar() async {
     final (lista, cache) = await _repository.obtenerGastos();
     gastos.value = lista;
+    // Por qué: si ya no queda ningún gasto de la categoría elegida (por ejemplo,
+    // se eliminó el último), se vuelve a «Todas» para no mostrar una lista vacía.
+    if (!categoriasEnGastos.contains(categoriaSeleccionada.value)) categoriaSeleccionada.value = null;
     totalEnServidor.value = lista.length;
     desdeCache.value = cache;
   }
@@ -126,6 +144,7 @@ class GastosController extends GetxController {
     await _repository.vaciar();
     gastos.clear();
     categorias.clear();
+    categoriaSeleccionada.value = null;
     totalEnServidor.value = 0;
     desdeCache.value = false;
     mensajeError.value = '';
