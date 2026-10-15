@@ -10,6 +10,7 @@ import '../services/api_exception.dart';
 import 'pantalla_con_fallo.dart';
 import '../widgets/empty_view.dart';
 import '../widgets/error_view.dart';
+import '../widgets/filtro_categorias.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/sin_sesion_view.dart';
 import 'cambiar_password_screen.dart';
@@ -103,10 +104,15 @@ class GastosScreen extends GetView<GastosController> {
                   ),
                 ],
               ),
+            FiltroCategorias(
+              categorias: controller.categoriasEnGastos,
+              seleccionada: controller.categoriaSeleccionada.value,
+              alSeleccionar: controller.seleccionarCategoria,
+            ),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: controller.cargarGastos,
-                child: _buildLista(context, controller.gastos),
+                child: _buildLista(context, controller.gastosFiltrados),
               ),
             ),
           ],
